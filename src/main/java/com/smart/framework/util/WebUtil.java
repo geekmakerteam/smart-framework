@@ -33,7 +33,7 @@ public class WebUtil {
         try {
             // 设置响应头
             response.setContentType("application/json"); // 指定内容类型为 JSON 格式
-            response.setCharacterEncoding(FrameworkConstant.CHARSET_UTF); // 防止中文乱码
+            response.setCharacterEncoding(FrameworkConstant.UTF_8); // 防止中文乱码
 
             // 向响应中写入数据
             PrintWriter writer = response.getWriter();
@@ -49,7 +49,7 @@ public class WebUtil {
         try {
             // 设置响应头
             response.setContentType("text/html"); // 指定内容类型为 HTML 格式
-            response.setCharacterEncoding(FrameworkConstant.CHARSET_UTF); // 防止中文乱码
+            response.setCharacterEncoding(FrameworkConstant.UTF_8); // 防止中文乱码
 
             // 向响应中写入数据
             PrintWriter writer = response.getWriter();
@@ -182,7 +182,7 @@ public class WebUtil {
     public static void downloadFile(HttpServletResponse response, String filePath) {
         try {
             String originalFileName = FilenameUtils.getName(filePath);
-            String downloadedFileName = new String(originalFileName.getBytes("GBK"), FrameworkConstant.CHARSET_ISO);
+            String downloadedFileName = new String(originalFileName.getBytes("GBK"), "ISO8859_1");
 
             response.setContentType("application/octet-stream");
             response.addHeader("Content-Disposition", "attachment;filename=\"" + downloadedFileName + "\"");
