@@ -7,12 +7,11 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <smart.version>1.0.1</smart.version>
     </properties>
 
     <groupId>com.smart</groupId>
     <artifactId>smart-framework</artifactId>
-    <version>${smart.version}</version>
+    <version>1.0.1</version>
 
     <dependencies>
         <!-- JUnit -->
