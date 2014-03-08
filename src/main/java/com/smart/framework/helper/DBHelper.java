@@ -255,8 +255,6 @@ public class DBHelper {
     }
 
     private static void printSQL(String sql) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("[Smart] SQL - {}", sql);
-        }
+        logger.debug("[Smart] SQL - {}", sql);
     }
 }

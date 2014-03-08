@@ -38,6 +38,8 @@ public class WebUtil {
             // 向响应中写入数据
             PrintWriter writer = response.getWriter();
             writer.write(JSONUtil.toJSON(data)); // 转为 JSON 字符串
+            writer.flush();
+            writer.close();
         } catch (Exception e) {
             logger.error("在响应中写数据出错！", e);
             throw new RuntimeException(e);
@@ -54,6 +56,8 @@ public class WebUtil {
             // 向响应中写入数据
             PrintWriter writer = response.getWriter();
             writer.write(JSONUtil.toJSON(data)); // 转为 JSON 字符串
+            writer.flush();
+            writer.close();
         } catch (Exception e) {
             logger.error("在响应中写数据出错！", e);
             throw new RuntimeException(e);
