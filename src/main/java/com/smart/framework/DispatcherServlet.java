@@ -62,8 +62,6 @@ public class DispatcherServlet extends HttpServlet {
         if (currentRequestPath.endsWith("/")) {
             currentRequestPath = currentRequestPath.substring(0, currentRequestPath.length() - 1);
         }
-        // 定义一个 JSP 映射标志（默认为映射失败）
-        boolean jspMapped = false;
         // 初始化 DataContext
         DataContext.init(request, response);
         try {
@@ -86,8 +84,6 @@ public class DispatcherServlet extends HttpServlet {
                     List<Object> actionMethodParamList = createActionMethodParamList(request, requestPathMatcher, actionBean);
                     // 调用 Action 方法
                     invokeActionMethod(request, response, actionClass, actionMethod, actionMethodParamList);
-                    // JSP 映射成功
-                    jspMapped = true;
                     // 若成功匹配，则终止循环
                     break;
                 }
