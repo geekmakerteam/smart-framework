@@ -13,7 +13,6 @@ import com.smart.framework.helper.bean.ActionBean;
 import com.smart.framework.helper.bean.RequestBean;
 import com.smart.framework.util.CastUtil;
 import com.smart.framework.util.MapUtil;
-import com.smart.framework.util.StringUtil;
 import com.smart.framework.util.WebUtil;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -40,7 +39,6 @@ public class DispatcherServlet extends HttpServlet {
     // 获取相关配置项
     private static final String homePage = ConfigHelper.getConfigString(FrameworkConstant.APP_HOME_PAGE);
     private static final String jspPath = ConfigHelper.getConfigString(FrameworkConstant.APP_JSP_PATH);
-    private static final String forbiddenURL = ConfigHelper.getConfigString(FrameworkConstant.APP_FORBIDDEN_URL);
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -98,17 +96,11 @@ public class DispatcherServlet extends HttpServlet {
             logger.error("文件上传出错！", e);
         } catch (Exception e) {
             logger.error("执行 DispatcherServlet 出错！", e);
+            // 跳转到 500 页面
+            WebUtil.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), response);
         } finally {
             // 销毁 DataContext
             DataContext.destroy();
-        }
-        // 若 JSP 映射失败，则根据默认路由规则转发请求
-        if (!jspMapped && StringUtil.isNotEmpty(jspPath)) {
-            // 获取路径（默认路由规则：/{1}/{2} => /xxx/{1}_{2}.jsp）
-            String path = jspPath + currentRequestPath.substring(1).replace("/", "_") + ".jsp";
-            // 转发请求
-            request.setAttribute("path", path);
-            WebUtil.forwardRequest(path, request, response);
         }
     }
 
@@ -184,15 +176,15 @@ public class DispatcherServlet extends HttpServlet {
         if (cause instanceof AccessException) {
             // 分两种情况进行处理
             if (WebUtil.isAJAX(request)) {
-                // 若为 AJAX 请求，则发送 FORBIDDEN(403) 错误
-                WebUtil.sendError(HttpServletResponse.SC_FORBIDDEN, response);
+                // 跳转到 403 页面
+                WebUtil.sendError(HttpServletResponse.SC_FORBIDDEN, "", response);
             } else {
                 // 否则重定向到首页
-                WebUtil.redirectRequest("/", request, response);
+                WebUtil.redirectRequest(homePage, request, response);
             }
         } else if (cause instanceof PermissionException) {
-            // 若为权限异常，则跳转到 Forbidden URL
-            WebUtil.redirectRequest(forbiddenURL, request, response);
+            // 跳转到 403 页面
+            WebUtil.sendError(HttpServletResponse.SC_FORBIDDEN, "", response);
         } else {
             // 若为其他异常，则记录错误日志
             logger.error("调用 Action 方法出错！", e);

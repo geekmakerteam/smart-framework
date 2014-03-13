@@ -141,9 +141,9 @@ public class WebUtil {
     }
 
     // 发送错误代码
-    public static void sendError(int code, HttpServletResponse response) {
+    public static void sendError(int code, String message, HttpServletResponse response) {
         try {
-            response.sendError(code);
+            response.sendError(code, message);
         } catch (Exception e) {
             logger.error("发送错误代码出错！", e);
             throw new RuntimeException(e);
