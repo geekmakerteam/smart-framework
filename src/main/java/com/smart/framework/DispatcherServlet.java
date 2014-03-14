@@ -65,6 +65,8 @@ public class DispatcherServlet extends HttpServlet {
         // 初始化 DataContext
         DataContext.init(request, response);
         try {
+            // 是否找到了 Action（默认为未找到）
+            boolean ok = false;
             // 获取并遍历 Action 映射
             Map<RequestBean, ActionBean> actionMap = ActionHelper.getActionMap();
             for (Map.Entry<RequestBean, ActionBean> actionEntry : actionMap.entrySet()) {
@@ -84,9 +86,15 @@ public class DispatcherServlet extends HttpServlet {
                     List<Object> actionMethodParamList = createActionMethodParamList(request, requestPathMatcher, actionBean);
                     // 调用 Action 方法
                     invokeActionMethod(request, response, actionClass, actionMethod, actionMethodParamList);
+                    // 找到了 Action
+                    ok = true;
                     // 若成功匹配，则终止循环
                     break;
                 }
+            }
+            // 若未找到 Action，则跳转到 404 页面
+            if (!ok) {
+                WebUtil.sendError(HttpServletResponse.SC_NOT_FOUND, "", response);
             }
         } catch (UploadException e) {
             logger.error("文件上传出错！", e);
