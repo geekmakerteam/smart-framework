@@ -4,7 +4,6 @@ import com.smart.framework.bean.Page;
 import com.smart.framework.bean.Result;
 import com.smart.framework.exception.AccessException;
 import com.smart.framework.exception.PermissionException;
-import com.smart.framework.exception.UploadException;
 import com.smart.framework.helper.ActionHelper;
 import com.smart.framework.helper.BeanHelper;
 import com.smart.framework.helper.ConfigHelper;
@@ -62,53 +61,65 @@ public class DispatcherServlet extends HttpServlet {
         if (currentRequestPath.endsWith("/")) {
             currentRequestPath = currentRequestPath.substring(0, currentRequestPath.length() - 1);
         }
+        // 定义几个变量（在下面的循环中使用）
+        ActionBean actionBean = null;
+        Matcher requestPathMatcher = null;
+        // 获取并遍历 Action 映射
+        Map<RequestBean, ActionBean> actionMap = ActionHelper.getActionMap();
+        for (Map.Entry<RequestBean, ActionBean> actionEntry : actionMap.entrySet()) {
+            // 从 RequestBean 中获取 Request 相关属性
+            RequestBean requestBean = actionEntry.getKey();
+            String requestMethod = requestBean.getRequestMethod();
+            String requestPath = requestBean.getRequestPath(); // 正则表达式
+            // 获取请求路径匹配器（使用正则表达式匹配请求路径并从中获取相应的请求参数）
+            requestPathMatcher = Pattern.compile(requestPath).matcher(currentRequestPath);
+            // 判断请求方法与请求路径是否同时匹配
+            if (requestMethod.equalsIgnoreCase(currentRequestMethod) && requestPathMatcher.matches()) {
+                // 获取 ActionBean 及其相关属性
+                actionBean = actionEntry.getValue();
+                // 若成功匹配，则终止循环
+                break;
+            }
+        }
+        // 若未找到 Action，则跳转到 404 页面
+        if (actionBean == null) {
+            WebUtil.sendError(HttpServletResponse.SC_NOT_FOUND, "", response);
+            return;
+        }
         // 初始化 DataContext
         DataContext.init(request, response);
         try {
-            // 是否找到了 Action（默认为未找到）
-            boolean ok = false;
-            // 获取并遍历 Action 映射
-            Map<RequestBean, ActionBean> actionMap = ActionHelper.getActionMap();
-            for (Map.Entry<RequestBean, ActionBean> actionEntry : actionMap.entrySet()) {
-                // 从 RequestBean 中获取 Request 相关属性
-                RequestBean requestBean = actionEntry.getKey();
-                String requestMethod = requestBean.getRequestMethod();
-                String requestPath = requestBean.getRequestPath(); // 正则表达式
-                // 获取请求路径匹配器（使用正则表达式匹配请求路径并从中获取相应的请求参数）
-                Matcher requestPathMatcher = Pattern.compile(requestPath).matcher(currentRequestPath);
-                // 判断请求方法与请求路径是否同时匹配
-                if (requestMethod.equalsIgnoreCase(currentRequestMethod) && requestPathMatcher.matches()) {
-                    // 获取 ActionBean 及其相关属性
-                    ActionBean actionBean = actionEntry.getValue();
-                    Class<?> actionClass = actionBean.getActionClass();
-                    Method actionMethod = actionBean.getActionMethod();
-                    // 创建 Action 方法参数列表
-                    List<Object> actionMethodParamList = createActionMethodParamList(request, requestPathMatcher, actionBean);
-                    // 调用 Action 方法
-                    invokeActionMethod(request, response, actionClass, actionMethod, actionMethodParamList);
-                    // 找到了 Action
-                    ok = true;
-                    // 若成功匹配，则终止循环
-                    break;
-                }
-            }
-            // 若未找到 Action，则跳转到 404 页面
-            if (!ok) {
-                WebUtil.sendError(HttpServletResponse.SC_NOT_FOUND, "", response);
-            }
-        } catch (UploadException e) {
-            logger.error("文件上传出错！", e);
+            // 调用 Action 方法
+            invokeActionMethod(request, response, actionBean, requestPathMatcher);
         } catch (Exception e) {
-            logger.error("执行 DispatcherServlet 出错！", e);
-            // 跳转到 500 页面
-            WebUtil.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), response);
+            // 处理 Action 异常
+            handleActionException(request, response, e);
         } finally {
             // 销毁 DataContext
             DataContext.destroy();
         }
     }
 
-    private List<Object> createActionMethodParamList(HttpServletRequest request, Matcher requestPathMatcher, ActionBean actionBean) throws Exception {
+    private void invokeActionMethod(HttpServletRequest request, HttpServletResponse response, ActionBean actionBean, Matcher requestPathMatcher) throws Exception {
+        // 获取 Action 相关信息
+        Class<?> actionClass = actionBean.getActionClass();
+        Method actionMethod = actionBean.getActionMethod();
+        // 从 BeanHelper 中创建 Action 实例
+        Object actionInstance = BeanHelper.getBean(actionClass);
+        // 调用 Action 方法
+        Object actionMethodResult;
+        Class<?>[] paramTypes = actionMethod.getParameterTypes();
+        List<Object> paramList = createActionMethodParamList(request, actionBean, requestPathMatcher);
+        if (paramTypes.length != paramList.size()) {
+            throw new RuntimeException("由于参数不匹配，无法调用 Action 方法！");
+        }
+        actionMethod.setAccessible(true); // 取消类型安全检测（可提高反射性能）
+        actionMethodResult = actionMethod.invoke(actionInstance, paramList.toArray());
+        // 处理 Action 方法返回值
+        handleActionMethodReturn(request, response, actionMethodResult);
+    }
+
+    private List<Object> createActionMethodParamList(HttpServletRequest request, ActionBean actionBean, Matcher requestPathMatcher) throws Exception {
         // 定义参数列表
         List<Object> paramList = new ArrayList<Object>();
         // 获取 Action 方法参数类型
@@ -153,49 +164,6 @@ public class DispatcherServlet extends HttpServlet {
         return paramList;
     }
 
-    private void invokeActionMethod(HttpServletRequest request, HttpServletResponse response, Class<?> actionClass, Method actionMethod, List<Object> actionMethodParamList) {
-        // 从 BeanHelper 中创建 Action 实例
-        Object actionInstance = BeanHelper.getBean(actionClass);
-        // 调用 Action 方法
-        Object actionMethodResult;
-        try {
-            Class<?>[] paramTypes = actionMethod.getParameterTypes();
-            if (paramTypes.length != actionMethodParamList.size()) {
-                throw new RuntimeException("由于参数不匹配，无法调用 Action 方法！");
-            }
-            actionMethod.setAccessible(true); // 取消类型安全检测（可提高反射性能）
-            actionMethodResult = actionMethod.invoke(actionInstance, actionMethodParamList.toArray());
-        } catch (Exception e) {
-            // 处理 Action 方法异常
-            handleActionMethodException(request, response, e);
-            // 直接返回
-            return;
-        }
-        // 处理 Action 方法返回值
-        handleActionMethodReturn(request, response, actionMethodResult);
-    }
-
-    private void handleActionMethodException(HttpServletRequest request, HttpServletResponse response, Exception e) {
-        Throwable cause = e.getCause();
-        if (cause instanceof AccessException) {
-            // 分两种情况进行处理
-            if (WebUtil.isAJAX(request)) {
-                // 跳转到 403 页面
-                WebUtil.sendError(HttpServletResponse.SC_FORBIDDEN, "", response);
-            } else {
-                // 否则重定向到首页
-                WebUtil.redirectRequest(homePage, request, response);
-            }
-        } else if (cause instanceof PermissionException) {
-            // 跳转到 403 页面
-            WebUtil.sendError(HttpServletResponse.SC_FORBIDDEN, "", response);
-        } else {
-            // 若为其他异常，则记录错误日志
-            logger.error("调用 Action 方法出错！", e);
-            throw new RuntimeException(e); // 这里需要向上抛出异常，否则无法定位到错误页面
-        }
-    }
-
     private void handleActionMethodReturn(HttpServletRequest request, HttpServletResponse response, Object actionMethodResult) {
         // 判断返回值类型
         if (actionMethodResult != null) {
@@ -231,6 +199,27 @@ public class DispatcherServlet extends HttpServlet {
                     WebUtil.forwardRequest(path, request, response);
                 }
             }
+        }
+    }
+
+    private void handleActionException(HttpServletRequest request, HttpServletResponse response, Exception e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof AccessException) {
+            // 分两种情况进行处理
+            if (WebUtil.isAJAX(request)) {
+                // 跳转到 403 页面
+                WebUtil.sendError(HttpServletResponse.SC_FORBIDDEN, "", response);
+            } else {
+                // 重定向到首页
+                WebUtil.redirectRequest(homePage, request, response);
+            }
+        } else if (cause instanceof PermissionException) {
+            // 跳转到 403 页面
+            WebUtil.sendError(HttpServletResponse.SC_FORBIDDEN, "", response);
+        } else {
+            // 跳转到 500 页面
+            logger.error("执行 Action 出错！", e);
+            WebUtil.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, cause.getMessage(), response);
         }
     }
 }
