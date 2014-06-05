@@ -275,6 +275,7 @@ TODO
 - [smart-plugin-hessian](http://git.oschina.net/huangyong/smart-plugin-hessian) -- 对 [Hessian](http://hessian.caucho.com/) 的封装
 - [smart-plugin-xmlrpc](http://git.oschina.net/huangyong/smart-plugin-xmlrpc) -- 提供基于 XML-RPC 的 Web Service 功能（封装 [Apache XML-RPC](http://ws.apache.org/xmlrpc/)）
 - [smart-plugin-search](http://git.oschina.net/huangyong/smart-plugin-search) -- 提供全文检索功能（封装 [Apache Lucene](http://lucene.apache.org/)）
+- smart-plugin-args -- 提供更加强大的 Action 方法参数绑定机制
 - smart-plugin-mybatis -- 对 [MyBatis](http://mybatis.github.io/mybatis-3/) 的封装
 
 ### 相关模块
@@ -284,7 +285,7 @@ TODO
 - [smart-sso](http://git.oschina.net/huangyong/smart-sso) -- 提供单点登录功能（封装 [Jasig CAS](http://www.jasig.org/cas)）
 - [smart-cache](http://git.oschina.net/huangyong/smart-cache) -- 提供缓存通用接口与默认实现（基于内存）
 - [smart-cache-ehcache](http://git.oschina.net/huangyong/smart-cache-ehcache)（封装 [EhCache](http://www.ehcache.org/)）
-- smart-cache-redis（封装 [Jedis](https://github.com/xetorthio/jedis/)）
+- [smart-cache-redis](http://git.oschina.net/lujianing/smart-cache-redis)（封装 [Jedis](https://github.com/xetorthio/jedis/)）
 
 ### 参考资料
 
