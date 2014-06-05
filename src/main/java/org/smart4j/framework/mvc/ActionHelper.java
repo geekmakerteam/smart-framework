@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Map;
 import org.smart4j.framework.core.ClassHelper;
 import org.smart4j.framework.mvc.annotation.Action;
+import org.smart4j.framework.mvc.annotation.DELETE;
+import org.smart4j.framework.mvc.annotation.GET;
+import org.smart4j.framework.mvc.annotation.POST;
+import org.smart4j.framework.mvc.annotation.PUT;
 import org.smart4j.framework.mvc.annotation.Request;
 import org.smart4j.framework.util.ArrayUtil;
 import org.smart4j.framework.util.CollectionUtil;
@@ -51,7 +55,14 @@ public class ActionHelper {
 
     private static void handleActionMethod(Class<?> actionClass, Method actionMethod, Map<Requestor, Handler> commonActionMap, Map<Requestor, Handler> regexpActionMap) {
         // 判断当前 Action 方法是否带有 Request 注解
-        if (actionMethod.isAnnotationPresent(Request.Get.class)) {
+        if (actionMethod.isAnnotationPresent(Request.class)) {
+            String[] urlArray = StringUtil.splitString(actionMethod.getAnnotation(Request.class).value(), ":");
+            if (ArrayUtil.isNotEmpty(urlArray)) {
+                String requestMethod = urlArray[0];
+                String requestPath = urlArray[1];
+                putActionMap(requestMethod, requestPath, actionClass, actionMethod, commonActionMap, regexpActionMap);
+            }
+        } else if (actionMethod.isAnnotationPresent(Request.Get.class)) {
             String requestPath = actionMethod.getAnnotation(Request.Get.class).value();
             putActionMap("GET", requestPath, actionClass, actionMethod, commonActionMap, regexpActionMap);
         } else if (actionMethod.isAnnotationPresent(Request.Post.class)) {
@@ -62,6 +73,18 @@ public class ActionHelper {
             putActionMap("PUT", requestPath, actionClass, actionMethod, commonActionMap, regexpActionMap);
         } else if (actionMethod.isAnnotationPresent(Request.Delete.class)) {
             String requestPath = actionMethod.getAnnotation(Request.Delete.class).value();
+            putActionMap("DELETE", requestPath, actionClass, actionMethod, commonActionMap, regexpActionMap);
+        } else if (actionMethod.isAnnotationPresent(GET.class)) {
+            String requestPath = actionMethod.getAnnotation(GET.class).value();
+            putActionMap("GET", requestPath, actionClass, actionMethod, commonActionMap, regexpActionMap);
+        } else if (actionMethod.isAnnotationPresent(POST.class)) {
+            String requestPath = actionMethod.getAnnotation(POST.class).value();
+            putActionMap("POST", requestPath, actionClass, actionMethod, commonActionMap, regexpActionMap);
+        } else if (actionMethod.isAnnotationPresent(PUT.class)) {
+            String requestPath = actionMethod.getAnnotation(PUT.class).value();
+            putActionMap("PUT", requestPath, actionClass, actionMethod, commonActionMap, regexpActionMap);
+        } else if (actionMethod.isAnnotationPresent(DELETE.class)) {
+            String requestPath = actionMethod.getAnnotation(DELETE.class).value();
             putActionMap("DELETE", requestPath, actionClass, actionMethod, commonActionMap, regexpActionMap);
         }
     }
