@@ -247,16 +247,16 @@ public class UserAction {
 
 > 提示：更多相关细节，请参考 [Smart Sample](http://git.oschina.net/huangyong/smart-sample) 示例。
 
+## 提高
+
+TODO
+
 ## 示例
 
 - Smart Sample：http://git.oschina.net/huangyong/smart-sample
 - Smart Bootstrap：http://git.oschina.net/huangyong/smart-bootstrap
 - Smart REST Server：http://git.oschina.net/huangyong/smart-rest-server
 - Smart REST Client：http://git.oschina.net/huangyong/smart-rest-client
-
-## 提高
-
-TODO
 
 ## 附录
 
@@ -275,8 +275,8 @@ TODO
 - [smart-plugin-hessian](http://git.oschina.net/huangyong/smart-plugin-hessian) -- 基于 [Hessian](http://hessian.caucho.com/) 的 RMI 插件
 - [smart-plugin-xmlrpc](http://git.oschina.net/huangyong/smart-plugin-xmlrpc) -- 基于 [Apache XML-RPC](http://ws.apache.org/xmlrpc/) 的 XML-RPC 插件
 - [smart-plugin-search](http://git.oschina.net/huangyong/smart-plugin-search) -- 基于 [Apache Lucene](http://lucene.apache.org/) 的搜索引擎插件
-- smart-plugin-mybatis -- 基于 [MyBatis](http://mybatis.github.io/mybatis-3/) 的数据持久层插件
-- smart-plugin-args -- 强大的 Action 方法参数绑定的插件
+- [smart-plugin-mybatis](http://git.oschina.net/free/smart-plugin-mybatis) -- 基于 [MyBatis](http://mybatis.github.io/mybatis-3/) 的数据持久层插件
+- [smart-plugin-args](http://git.oschina.net/free/smart-plugin-args) -- 强大的 Action 方法参数绑定的插件
 - [smart-plugin-c3p0](http://git.oschina.net/huangyong/smart-plugin-c3p0) -- 基于 [C3P0](http://sourceforge.net/projects/c3p0/) 的连接池插件
 - [smart-plugin-druid](http://git.oschina.net/huangyong/smart-plugin-druid) -- 基于 [Druid](https://github.com/alibaba/druid) 的连接池插件
 
